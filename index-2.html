@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DestiFly Business Portal</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+.login{min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#fff,#eef5ff)}
+.card{width:min(420px,100%);background:#fff;padding:32px;border-radius:22px;box-shadow:0 15px 45px #0001}
+.logo,.brand{font-weight:900;color:#f47b20}.logo{font-size:34px}.logo span,.brand span{color:#1261a0}
+.muted{color:#667085}input,select,button{font:inherit}input,select{width:100%;padding:13px;margin:7px 0;border:1px solid #d7dee8;border-radius:10px}
+button{border:0;border-radius:10px;padding:12px 16px;background:#1261a0;color:white;font-weight:700;cursor:pointer}
+.login button{width:100%;margin-top:8px;background:linear-gradient(90deg,#f47b20,#1261a0)}
+#app{display:none}.top{height:70px;background:#fff;border-bottom:1px solid #e5e9f0;display:flex;align-items:center;justify-content:space-between;padding:0 24px}
+.brand{font-size:25px}.layout{display:flex;min-height:calc(100vh - 70px)}
+aside{width:230px;background:#12233d;padding:20px 13px}aside button{width:100%;text-align:left;margin:4px 0;background:transparent}
+aside button.active,aside button:hover{background:#ffffff18}main{flex:1;padding:28px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.stat,.section,.mini{background:#fff;border:1px solid #e8edf3;border-radius:16px;padding:18px}
+.stat b{display:block;font-size:28px;margin-top:7px}.section{margin-top:20px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.light{background:#eef4fb;color:#1261a0}
+.badge{display:inline-block;padding:5px 9px;border-radius:20px;background:#e9f7ef;color:#17834a;font-size:12px;font-weight:700}
+@media(max-width:800px){aside{width:75px}aside button{font-size:0;text-align:center}.grid{grid-template-columns:repeat(2,1fr)}.cards{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){main{padding:15px}.grid,.cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="login" id="login">
+  <div class="card">
+    <div class="logo">Desti<span>Fly</span></div>
+    <p class="muted">Business Portal • Admin</p>
+    <h2>Welcome back</h2>
+    <input id="u" placeholder="Username">
+    <input id="p" type="password" placeholder="Password">
+    <button onclick="login()">Login to Portal</button>
+    <p class="muted" style="font-size:12px">Demo access: admin / desti123</p>
+  </div>
+</div>
+
+<div id="app">
+<header class="top">
+  <div class="brand">Desti<span>Fly</span> Business</div>
+  <button onclick="location.reload()">Logout</button>
+</header>
+<div class="layout">
+<aside>
+<button class="active" onclick="show('Dashboard',this)">🏠 Dashboard</button>
+<button onclick="show('Customers',this)">👥 Customers</button>
+<button onclick="show('Bookings',this)">📋 Bookings</button>
+<button onclick="show('Umrah',this)">🕋 Umrah</button>
+<button onclick="show('Tickets',this)">✈️ Tickets</button>
+<button onclick="show('Hotels',this)">🏨 Hotels</button>
+<button onclick="show('Marketing',this)">📣 Marketing</button>
+</aside>
+<main>
+<h1 id="title">Dashboard</h1>
+<p class="muted">Manage DestiFly travel, Umrah, tickets and hotels.</p>
+<div id="content"></div>
+</main>
+</div>
+</div>
+
+<script>
+const KEY='desti_data';
+let d=JSON.parse(localStorage.getItem(KEY)||'null')||{customers:[],bookings:[]};
+function save(){localStorage.setItem(KEY,JSON.stringify(d))}
+function login(){
+  if(document.getElementById('u').value==='admin' && document.getElementById('p').value==='desti123'){
+    document.getElementById('login').style.display='none';
+    document.getElementById('app').style.display='block';
+    show('Dashboard');
+  }else alert('Use admin / desti123');
+}
+function show(n,b){
+  document.querySelectorAll('aside button').forEach(x=>x.classList.remove('active'));
+  if(b)b.classList.add('active');
+  document.getElementById('title').textContent=n;
+  let c=document.getElementById('content');
+
+  if(n==='Dashboard') c.innerHTML=
+  '<div class="grid">'+
+  '<div class="stat">Customers<b>'+d.customers.length+'</b></div>'+
+  '<div class="stat">Bookings<b>'+d.bookings.length+'</b></div>'+
+  '<div class="stat">Pending<b>'+d.bookings.filter(x=>x.status==="Pending").length+'</b></div>'+
+  '<div class="stat">Portal<b>LIVE</b></div></div>'+
+  '<div class="section"><h2>Quick Actions</h2><div class="actions">'+
+  '<button onclick="show(\'Customers\')">+ Customer</button>'+
+  '<button onclick="show(\'Bookings\')">+ Booking</button></div></div>';
+
+  if(n==='Customers') c.innerHTML=
+  '<div class="section"><h2>Add Customer</h2>'+
+  '<input id="cn" placeholder="Customer name">'+
+  '<input id="cp" placeholder="Phone">'+
+  '<select id="cs"><option>Umrah</option><option>Air Ticket</option><option>Hotel</option><option>Transport</option></select>'+
+  '<button onclick="addC()">Save Customer</button></div>'+
+  '<div class="section"><h2>Customers</h2>'+
+  d.customers.map(x=>'<p><b>'+x.name+'</b> — '+x.phone+' — '+x.service+'</p>').join('')+
+  '</div>';
+
+  if(n==='Bookings') c.innerHTML=
+  '<div class="section"><h2>New Booking</h2>'+
+  '<input id="bn" placeholder="Customer name">'+
+  '<select id="bs"><option>Umrah Package</option><option>Air Ticket</option><option>Hotel</option><option>Transport</option></select>'+
+  '<button onclick="addB()">Create Booking</button></div>'+
+  '<div class="section"><h2>Bookings</h2>'+
+  d.bookings.map(x=>'<p><b>'+x.ref+'</b> — '+x.customer+' — '+x.service+' — <span class="badge">'+x.status+'</span></p>').join('')+
+  '</div>';
+
+  if(n==='Umrah') c.innerHTML=
+  '<div class="cards">'+
+  '<div class="mini"><h2>21 Days</h2><b>With transport: 600 SAR</b><p>Without transport: 540 SAR</p></div>'+
+  '<div class="mini"><h2>28 Days</h2><b>With transport: 600 SAR</b><p>Without transport: 540 SAR</p></div>'+
+  '<div class="mini"><h2>Payment</h2><p>Advance payment + confirmed ticket required.</p></div>'+
+  '</div>';
+
+  if(n==='Tickets') c.innerHTML=
+  '<div class="section"><h2>All Airline Tickets</h2><p class="muted">Route, passenger, airline, fare and booking reference management.</p></div>';
+
+  if(n==='Hotels') c.innerHTML=
+  '<div class="cards">'+
+  '<div class="mini"><h3>Qila Ajyad Makkah</h3><p>On demand</p></div>'+
+  '<div class="mini"><h3>Sanood Motan Makkah</h3><p>2000 m • shuttle • on demand</p></div>'+
+  '<div class="mini"><h3>Multaqa Ibadah Makkah</h3><p>800 m • on demand</p></div>'+
+  '<div class="mini"><h3>Mather Al Jawar Makkah</h3><p>500 m • on demand</p></div>'+
+  '<div class="mini"><h3>Fajar Badi 5 Makkah</h3><p>500 m • on demand</p></div>'+
+  '</div>';
+
+  if(n==='Marketing') c.innerHTML=
+  '<div class="section"><h2>DestiFly Travels</h2>'+
+  '<p>We provide travel and tour services.</p>'+
+  '<p><b>Phone:</b> 03068157051<br><b>Email:</b> destiflytravels@gmail.com<br><b>Office:</b> M.A Plaza near TCS Office Kahror Pacca</p>'+
+  '<p>Visa ho ya all airline ticket ya hotel — DestiFly Travels par behtareen rates aur Umrah full package options.</p></div>';
+}
+function addC(){
+  let name=document.getElementById('cn').value,phone=document.getElementById('cp').value;
+  if(!name||!phone)return alert('Name and phone required');
+  d.customers.push({name,phone,service:document.getElementById('cs').value});save();show('Customers');
+}
+function addB(){
+  let name=document.getElementById('bn').value;
+  if(!name)return alert('Customer name required');
+  d.bookings.push({ref:'DF-'+(1001+d.bookings.length),customer:name,service:document.getElementById('bs').value,status:'Pending'});
+  save();show('Bookings');
+}
+</script>
+</body>
+</html>
